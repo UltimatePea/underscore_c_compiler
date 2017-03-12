@@ -44,7 +44,7 @@ into
 
 #How to run
 
-Download the binary. compile digests all inputstream and put the content to output stream.
+Download the binary. `compile` digests all input stream(`stdin`) and put the content to output stream(`stdout`).
 
 ```
 $ ./compile <[inputfile] >[outputfile]
