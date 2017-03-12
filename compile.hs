@@ -20,7 +20,7 @@ process xs = let listOfTokens = organize (tokenize xs)
                  contentLines = dropWhile lineStartsWithHashSign linesInFile
                  content =  processLine listOfTokens $ unlines contentLines
                  defines = defineTokens listOfTokens
-             in unlines includesLines ++ unlines defines ++ content
+             in unlines includesLines ++ unlines defines ++ "\n\n\n"  ++ content -- add three empty lines
              
             -- unlines $ processLines listOfTokens $ lines $  dropWhile lineStartsWithHashSign $lines xs
 
@@ -36,7 +36,7 @@ process xs = let listOfTokens = organize (tokenize xs)
 
 -- get #defines for tokens
 defineTokens :: [Token] -> [String]
-defineTokens xs = L.map getDefineForTag xs
+defineTokens xs = L.filter (/=[]) $ L.map getDefineForTag xs
                   where getDefineForTag :: Token -> String
                         -- only define when token is valid id
                         getDefineForTag tk 
