@@ -71,5 +71,3 @@ For example,
 $ ./compile <a.c > a_compiled.c
 ```
 
-##Known issue
-The code cannot have trailing escapes
