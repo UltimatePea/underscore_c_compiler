@@ -59,7 +59,7 @@ into
 
 #How to run
 
-Downlaod the binary. compile digests all inputstream and put the content to output stream.
+Download the binary. compile digests all inputstream and put the content to output stream.
 
 ```
 $ ./compile <[inputfile] >[outputfile]
