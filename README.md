@@ -15,6 +15,7 @@ int main() {
 ```
 into
 ```
+
 #include <stdio.h>
 #define _ i
 #define __ int
@@ -22,37 +23,21 @@ into
 #define ____ 4
 #define _____ array
 #define ______ for
-#define _______ four
-#define ________ h
-#define _________ include
-#define __________ main
-#define ___________ numbers
-#define ____________ print
-#define _____________ printf
-#define ______________ stdio
+#define _______ h
+#define ________ include
+#define _________ main
+#define __________ printf
+#define ___________ stdio
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- __  __________ (){
+ __  _________ (){
  __  _ ;
  __  _____ [ ____ ];
-// ____________  _______  ___________ 
+/// print four numbers
  ______ ( _ = ___ ; _ <= ____ ; _ ++){
  _____ [ _ ]= ___ ;
- _____________ (" %d\n ", _ );
+ __________ (" %d\n ", _ );
 }
 }
 ```
