@@ -15,16 +15,24 @@ main = do
 
 process :: String -> String
 process xs = let listOfTokens = organize (tokenize xs)
-             in unlines $ processLines listOfTokens $ lines xs
+                 linesInFile = lines xs
+                 includesLines = takeWhile lineStartsWithHashSign linesInFile
+                 contentLines = dropWhile lineStartsWithHashSign linesInFile
+                 content =  processLine listOfTokens $ unlines contentLines
+                 defines = defineTokens listOfTokens
+             in unlines includesLines ++ unlines defines ++ content
+             
+            -- unlines $ processLines listOfTokens $ lines $  dropWhile lineStartsWithHashSign $lines xs
 
-processLines :: [Token] -- list of known tokens
-                -> [String] -- list of lines
-                -> [String] --resulting lines
-processLines tokens lines = let underscoreLized = L.map (processLine tokens) lines :: [String]
-                                -- insert define
-                            in takeWhile lineStartsWithHashSign underscoreLized 
-                            ++ defineTokens tokens
-                            ++ dropWhile lineStartsWithHashSign underscoreLized
+----inserts defines into lines, assuming liness already underscorlized
+--processLines :: [Token] -- list of known tokens
+--                -> [String] -- list of lines
+--                -> [String] --resulting lines
+--processLines tokens lines = let underscoreLized = lines -- L.map (processLine tokens) lines :: [String]
+--                                -- insert define
+--                            in takeWhile lineStartsWithHashSign underscoreLized 
+--                            ++ defineTokens tokens
+--                            ++ dropWhile lineStartsWithHashSign underscoreLized
 
 -- get #defines for tokens
 defineTokens :: [Token] -> [String]
@@ -41,10 +49,11 @@ defineTokens xs = L.map getDefineForTag xs
                             Just idx -> idx
                             Nothing -> error "Global Define :: Token Not Found"
 
--- if line starts with hashSign, empty lines and #include, #define are considered true
+-- if line starts with hashSign, empty lines and #include, #define , comments are considered true
 lineStartsWithHashSign :: String -> Bool
 lineStartsWithHashSign [] = True
 lineStartsWithHashSign ('#':_) = True
+lineStartsWithHashSign ('/':'/':_) = True
 lineStartsWithHashSign _ = False
 
 
@@ -64,7 +73,7 @@ mapToken tokens tk = case tk `elemIndex` tokens of
                         Just idx -> if isTokenValidID tk  -- only substitute when token is underscore
                                     then ' ' : replicate (idx+1) '_' ++ " " -- is id, put space and underscore
                                     else getTokenContent tk -- not token, just put the original string
-                        Nothing -> error "Token Not Found, Check implementation logic"
+                        Nothing -> error $ "Token Not Found, Check implementation logic" ++ show tk
 
 
 data Token = Token 
@@ -93,25 +102,37 @@ tokenize :: String -> [Token]
 tokenize [] = []
 tokenize (x:xs)
     | isValidID x = Token (x:(takeWhile isValidID xs)) True: tokenize (dropWhile isValidID xs)
+    | x == '\n' = Token "\n" False : tokenize xs
     | isSpace x = tokenize xs
-    | isQuote x = Token (x:(fst $ quoteEscape xs)) False : tokenize ( snd $ quoteEscape xs)
+    | isQuote x = Token (x:(fst $ quoteEscape xs x)) False : tokenize ( snd $ quoteEscape xs x)
+    | x == '/' && xs == [] = []
+    | x == '/' && head xs == '/' = Token ('/':'/':(takeWhile (/='\n') xs)) False : tokenize ( dropWhile (/='\n') xs)
+    | x == '/' && head xs == '*' = Token ('/':'*':(fst $ multiLineCommentEscape xs)) False 
+                                                    : tokenize (snd $ multiLineCommentEscape xs)
     | otherwise = Token [x] False: tokenize xs
 
 isValidID :: Char -> Bool
 isValidID x = (isAlphaNum x ) || ( x == '_')
 
 isQuote :: Char -> Bool
-isQuote x = x == '\"'
+isQuote x = x == '\"' || x == '\''
 
---quote escape :: hel, fjis\"jisjv"sub -> (hel, fjis\"jisjv", sub)
-quoteEscape :: String -> (String, String)
-quoteEscape str = quoteEscapeRec ("", str) 
+multiLineCommentEscape :: String -> (String, String)
+multiLineCommentEscape str = multiLineCommentEscapeRec ("", str)
+        where multiLineCommentEscapeRec :: (String, String) -> (String, String)
+              multiLineCommentEscapeRec (a, []) = (a, []) -- should not happen
+              multiLineCommentEscapeRec (a, ('*':'/':xs)) = (a ++ "*/", xs)
+              multiLineCommentEscapeRec (a, (x:xs)) = multiLineCommentEscapeRec (a ++ [x], xs)
+
+
+--quote escape :: hel, fjis\"jisjv"sub -> " -> (hel, fjis\"jisjv", sub)
+quoteEscape :: String -> Char -> (String, String) -- string -> " or ' -> inquote, afterquote
+quoteEscape str q = quoteEscapeRec ("", str) 
                   where quoteEscapeRec :: (String, String) -> (String, String)
                         --single escape
                         quoteEscapeRec (a,('\\':x:xs)) = quoteEscapeRec (a ++ ['\\'] ++ [x], xs)
-                        quoteEscapeRec (a,('\"':xs)) = (a ++ "\"", xs)
-                        quoteEscapeRec (a,(x:xs)) = quoteEscapeRec (a++[x], xs)
-                        quoteEscapeRec (a, [] ) = (a, [])
+                        quoteEscapeRec (a,(x:xs)) = if x == q then (a++[q], xs) else quoteEscapeRec (a++[x], xs)
+                        quoteEscapeRec (a, [] ) = (a, []) -- should not happen
 
 
 organize :: [Token] -> [Token]
