@@ -3,6 +3,7 @@ import Data.Char
 import Data.Map as M
 import Data.Set as S
 import Data.List as L
+import Debug.Trace (trace)
 
 
 main = do 
@@ -13,7 +14,7 @@ main = do
 
 
 process :: String -> String
-process xs = let listOfTokens = S.toList $ S.fromList (tokenize xs)
+process xs = let listOfTokens = organize (tokenize xs)
              in unlines $ processLines listOfTokens $ lines xs
 
 processLines :: [Token] -- list of known tokens
@@ -111,3 +112,20 @@ quoteEscape str = quoteEscapeRec ("", str)
                         quoteEscapeRec (a,('\"':xs)) = (a ++ "\"", xs)
                         quoteEscapeRec (a,(x:xs)) = quoteEscapeRec (a++[x], xs)
                         quoteEscapeRec (a, [] ) = (a, [])
+
+
+organize :: [Token] -> [Token]
+organize xs = let sorted = L.sortBy (\x y -> tokenOrdering x y xs) xs -- sort list DESCENDING
+                  setSorted = removeRepeat sorted
+              in L.filter isTokenValidID setSorted ++ L.filter (not . isTokenValidID ) setSorted
+
+-- return the token orderings
+tokenOrdering :: Token -> Token -> [Token] -> Ordering
+tokenOrdering x y xs = let countOrder = compare (length $ elemIndices y xs) 
+                                        (length $ elemIndices x xs)
+                       in case countOrder of 
+                            EQ -> compare x y
+                            x -> x
+
+removeRepeat :: (Eq a, Show a, Ord a) => [a] -> [a]
+removeRepeat xs = L.map head . group $ xs
