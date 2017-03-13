@@ -105,9 +105,10 @@ tokenize (x:xs)
     | x == '\n' = Token "\n" False : tokenize xs
     | isSpace x = tokenize xs
     | isQuote x = Token (x:(fst $ quoteEscape xs x)) False : tokenize ( snd $ quoteEscape xs x)
-    | x == '#' = Token ('#':(takeWhile (/='\n') xs)) False : tokenize ( dropWhile (/='\n') xs) -- ignore # until end of sentence
+    -- ignore # until end of sentence, using quote escape
+    | x == '#' = Token (x:(fst $ quoteEscape xs '\n')) False : tokenize ( snd $ quoteEscape xs '\n')
     | x == '/' && xs == [] = []
-    | x == '/' && head xs == '/' = Token ('/':'/':(takeWhile (/='\n') xs)) False : tokenize ( dropWhile (/='\n') xs)
+    | x == '/' && head xs == '/' = Token (x:(fst $ quoteEscape xs '\n')) False : tokenize ( snd $ quoteEscape xs '\n')
     | x == '/' && head xs == '*' = Token ('/':'*':(fst $ multiLineCommentEscape xs)) False 
                                                     : tokenize (snd $ multiLineCommentEscape xs)
     | otherwise = Token [x] False: tokenize xs
