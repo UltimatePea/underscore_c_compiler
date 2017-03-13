@@ -56,3 +56,11 @@ For example,
 $ ./compile <a.c > a_compiled.c
 ```
 
+
+###Note that the binary is compiled under macOS 10.12.3, recompilation is needed if you want to run it on other platforms.
+
+To compile this project, download Haskell compiler (`ghc`) from https://www.haskell.org/ghc/download, compile code using
+
+```
+$ ghc compile.hs
+```
